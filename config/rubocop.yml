@@ -6,6 +6,7 @@ AllCops:
     - 'Gemfile'
     - 'Gemfile.devtools'
   Excludes:
+    - '**/spec/setup/**'
     - '**/vendor/**'
     - '**/benchmarks/**'
 
