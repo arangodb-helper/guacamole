@@ -1,6 +1,7 @@
 # -*- encoding : utf-8 -*-
 
 require 'logger'
+require 'forwardable'
 
 require 'guacamole/document_model_mapper'
 
@@ -23,24 +24,12 @@ module Guacamole
     attr_accessor :database, :default_mapper, :logger
 
     class << self
-      def database=(database)
-        configuration.database = database
-      end
+      extend Forwardable
 
-      def database
-        configuration.database
-      end
-
-      def default_mapper=(default_mapper)
-        configuration.default_mapper = default_mapper
-      end
+      def_delegators :configuration, :database, :database=, :default_mapper=, :logger=
 
       def default_mapper
         configuration.default_mapper || (self.default_mapper = Guacamole::DocumentModelMapper)
-      end
-
-      def logger=(logger)
-        configuration.logger = logger
       end
 
       def logger
