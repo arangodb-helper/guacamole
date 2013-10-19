@@ -2,6 +2,8 @@
 
 require 'logger'
 require 'forwardable'
+require 'ashikawa-core'
+require 'active_support/core_ext'
 
 require 'guacamole/document_model_mapper'
 
@@ -33,13 +35,41 @@ module Guacamole
       end
 
       def logger
-        configuration.logger ||= default_logger
+        configuration.logger ||= (rails_logger || default_logger)
+      end
+
+      def load(file_name)
+        config = YAML.load_file(file_name)[current_environment.to_s]
+
+        self.database = create_database_connection_from(config)
+      end
+
+      def current_environment
+        return Rails.env if defined?(Rails)
+        ENV['RACK_ENV'] || ENV['GUACAMOLE_ENV']
       end
 
       private
 
       def configuration
         @configuration ||= new
+      end
+
+      def create_database_connection_from(config)
+        Ashikawa::Core::Database.new do |arango_config|
+          arango_config.url      = db_url_from(config)
+          arango_config.username = config['username']
+          arango_config.password = config['password']
+          arango_config.logger   = logger
+        end
+      end
+
+      def db_url_from(config)
+        "#{config['protocol']}://#{config['host']}:#{config['port']}/_db/#{config['database']}"
+      end
+
+      def rails_logger
+        return Rails.logger if defined?(Rails)
       end
 
       def default_logger
