@@ -1,0 +1,11 @@
+# FIXME: This is copied from Ashikawa::Core for now but is not recommended. This
+# setup uses the default database instead of a custom DB. Due to this we're deleting
+# all collections in the default database each time we run the specs.
+# => This is not good!
+test:
+  protocol: 'http'
+  host: 'localhost'
+  port: 8529
+  password: ''
+  username: ''
+  database: '_system'

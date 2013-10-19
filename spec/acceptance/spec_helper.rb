@@ -32,13 +32,7 @@ end
 
 Fabrication::Schematic::Definition::GENERATORS.unshift Fabrication::Generator::Guacamole
 
-# FIXME: This is copied from Ashikawa::Core for now but is not recommended. This
-# setup uses the default database instead of a custom DB. Due to this we're deleting
-# all collections in the default database each time we run the specs.
-# => This is not good!
-port     = ENV['ARANGODB_PORT'] || 8529
-username = ENV['ARANGODB_USERNAME'] || 'root'
-password = ENV['ARANGODB_PASSWORD'] || ''
+ENV['GUACAMOLE_ENV'] = 'test'
 
 Guacamole.configure do |config|
   logger = Logging.logger['guacamole_logger']
@@ -49,14 +43,7 @@ Guacamole.configure do |config|
 
   config.logger = logger
 
-  config.database = Ashikawa::Core::Database.new { |arango_config|
-    arango_config.url = "http://localhost:#{port}"
-    unless ENV['ARANGODB_DISABLE_AUTHENTIFICATION']
-      arango_config.username = username
-      arango_config.password = password
-    end
-    arango_config.logger = config.logger
-  }
+  config.load File.join(File.dirname(__FILE__), 'config', 'guacamole.yml')
 end
 
 RSpec.configure do |config|
