@@ -9,7 +9,7 @@ ClassVariable:
   enabled: true
   exclude: []
 ControlParameter:
-  enabled: true
+  enabled: false
   exclude: []
 DataClump:
   enabled: true
@@ -49,7 +49,7 @@ NilCheck:
 RepeatedConditional:
   enabled: true
   exclude: []
-  max_ifs: 1
+  max_ifs: 2
 TooManyInstanceVariables:
   enabled: true
   exclude: []

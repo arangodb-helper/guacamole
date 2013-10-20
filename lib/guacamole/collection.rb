@@ -2,6 +2,7 @@
 
 require 'guacamole/query'
 
+require 'ashikawa-core'
 require 'active_support/concern'
 require 'active_support/core_ext/string/inflections'
 
@@ -37,6 +38,8 @@ module Guacamole
       end
 
       def by_key(key)
+        raise Ashikawa::Core::DocumentNotFoundException unless key
+
         mapper.document_to_model connection.fetch(key)
       end
 
