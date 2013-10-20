@@ -284,4 +284,62 @@ describe Guacamole::Collection do
       end
     end
   end
+
+  describe 'by_example' do
+    let(:example) { double }
+    let(:query_connection) { double }
+    let(:query) { double }
+
+    before do
+      allow(connection).to receive(:query)
+        .and_return(query_connection)
+
+      allow(Guacamole::Query).to receive(:new)
+        .and_return(query)
+
+      allow(query).to receive(:example=)
+    end
+
+    it 'should create a new query with the query connection and mapper' do
+      expect(Guacamole::Query).to receive(:new)
+        .with(query_connection, mapper)
+
+      subject.by_example(example)
+    end
+
+    it 'should set the example for the query' do
+      expect(query).to receive(:example=)
+        .with(example)
+
+      subject.by_example(example)
+    end
+
+    it 'should return the query' do
+      expect(subject.by_example(example)).to be query
+    end
+  end
+
+  describe 'all' do
+    let(:query_connection) { double }
+    let(:query) { double }
+
+    before do
+      allow(connection).to receive(:query)
+        .and_return(query_connection)
+
+      allow(Guacamole::Query).to receive(:new)
+        .and_return(query)
+    end
+
+    it 'should create a new query with the query connection and mapper' do
+      expect(Guacamole::Query).to receive(:new)
+        .with(query_connection, mapper)
+
+      subject.all
+    end
+
+    it 'should return the query' do
+      expect(subject.all).to be query
+    end
+  end
 end

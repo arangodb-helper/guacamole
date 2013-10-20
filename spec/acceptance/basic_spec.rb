@@ -79,6 +79,15 @@ describe 'CollectionBasics' do
 
       expect(updated_article.title).to eq 'Has been updated'
     end
+
+    it 'should receive all documents by title' do
+      subject.save Fabricate.build(:article, title: 'Disturbed')
+      subject.save Fabricate.build(:article, title: 'Not so Disturbed')
+
+      result = subject.by_example(title: 'Disturbed').first
+
+      expect(result.title).to eq 'Disturbed'
+    end
   end
 
 end

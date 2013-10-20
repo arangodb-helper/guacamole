@@ -1,4 +1,7 @@
 # -*- encoding : utf-8 -*-
+
+require 'guacamole/query'
+
 require 'active_support/concern'
 require 'active_support/core_ext/string/inflections'
 
@@ -56,6 +59,16 @@ module Guacamole
         model.updated_at = Time.now
         replace_document_from(model)
         model
+      end
+
+      def by_example(example)
+        query = all
+        query.example = example
+        query
+      end
+
+      def all
+        Query.new(connection.query, mapper)
       end
 
       def add_timestamps_to_model(model)
