@@ -107,6 +107,10 @@ describe Guacamole::Collection do
 
       expect(subject.by_key('some_key')).to eq model
     end
+
+    it 'should raise a Ashikawa::Core::DocumentNotFoundException exception for nil' do
+      expect { subject.by_key(nil) }.to raise_error(Ashikawa::Core::DocumentNotFoundException)
+    end
   end
 
   describe 'save' do

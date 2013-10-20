@@ -27,6 +27,10 @@ CollectionMethods:
     find:     'detect'
     find_all: 'select'
 
+SignalException:
+  # Valid values are: semantic, only_raise and only_fail
+  EnforcedStyle: only_raise
+
 # Do not force public/protected/private keyword to be indented at the same
 # level as the def keyword. My personal preference is to outdent these keywords
 # because I think when scanning code it makes it easier to identify the

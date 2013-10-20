@@ -9,7 +9,7 @@ ClassVariable:
   enabled: true
   exclude: []
 ControlParameter:
-  enabled: true
+  enabled: false
   exclude: []
 DataClump:
   enabled: true
