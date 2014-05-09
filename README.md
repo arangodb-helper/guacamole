@@ -71,11 +71,11 @@ Now where everything is set up we can go ahead and create our application's logi
 
 ## Usage
 
-One of the key features of Guacamole is the implementation of the [Data Mapper Patter](http://martinfowler.com/eaaCatalog/dataMapper.html). This brings a lot of good things along, like
+One of the key features of Guacamole is the implementation of the [Data Mapper Pattern](http://martinfowler.com/eaaCatalog/dataMapper.html). This brings a lot of good things along, like
 
-  * Improved testability
-  * Separation of Concern and
-  * Easier to support database features like embedded objects
+  * improved testability,
+  * separation of concern and
+  * easier to support database features like embedded objects.
 
 The gist of the pattern is you have two classes where you would have one when you use ActiveRecord: A `Collection` and a `Model`. The `Collection` is responsible for getting data from and writing data to the database. The `Model` represents the domain logic (i.e. attributes) and has no idea what a database is. Due to this you could far easier test the domain logic without a database dependency. But you have always two (or more) classes around. The following will introduce you to both those classes.
 
@@ -109,7 +109,7 @@ class Pony
 end
 ```
 
-For further reference what is possible please refer to the [Virtus documentation](http://rubydoc.info/gems/virtus/1.0.2/frames). One thing to add here, whenever you assign a value to an attribute Virtus will perform a type coercion:
+For further reference what is possible please refer to the [Virtus documentation](http://rubydoc.info/gems/virtus/1.0.2/frames). One thing to note here: Whenever you assign a value to an attribute Virtus will perform a type coercion:
 
 ```ruby
 pinkie_pie = Pony.new
