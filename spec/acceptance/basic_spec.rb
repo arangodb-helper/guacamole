@@ -2,10 +2,29 @@
 require 'guacamole'
 require 'acceptance/spec_helper'
 
+# TODO: What is going on here?!
+class CommentsCollection; end
+class Article; end
+class AuthorsCollection; end
+class BooksCollection; end
+class Pony; end
+class Comment; end
+require 'fabricators/pony'
+require 'fabricators/article_fabricator'
+require 'fabricators/comment_fabricator'
+
 class Comment
   include Guacamole::Model
 
   attribute :text, String
+end
+
+class ArticlesCollection
+  include Guacamole::Collection
+
+  map do
+    embeds :comments
+  end
 end
 
 class Article
@@ -15,14 +34,6 @@ class Article
   attribute :comments, Array[Comment]
 
   validates :title, presence: true
-end
-
-class ArticlesCollection
-  include Guacamole::Collection
-
-  map do
-    embeds :comments
-  end
 end
 
 describe 'ModelBasics' do

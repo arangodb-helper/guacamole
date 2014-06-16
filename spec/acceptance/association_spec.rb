@@ -2,8 +2,12 @@
 require 'guacamole'
 require 'acceptance/spec_helper'
 
-require 'fabricators/book'
-require 'fabricators/author'
+# TODO: Figure out what is going on here
+class Article; end
+class Comment; end
+class Pony; end
+class Author; end
+class Book; end
 
 class AuthorsCollection
   include Guacamole::Collection
@@ -20,6 +24,11 @@ class BooksCollection
     references :author
   end
 end
+
+require 'fabricators/book'
+require 'fabricators/book_fabricator'
+require 'fabricators/author'
+require 'fabricators/author_fabricator'
 
 describe 'Associations' do
   let(:author) { Fabricate(:author_with_three_books) }

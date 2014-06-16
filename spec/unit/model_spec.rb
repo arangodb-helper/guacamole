@@ -3,6 +3,14 @@
 require 'spec_helper'
 require 'guacamole/model'
 
+class TestModelsCollection
+  include Guacamole::Collection
+end
+
+class OtherModelsCollection
+  include Guacamole::Collection
+end
+
 class TestModel
   include Guacamole::Model
 end

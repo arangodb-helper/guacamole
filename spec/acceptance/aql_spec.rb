@@ -3,16 +3,20 @@
 require 'guacamole'
 require 'acceptance/spec_helper'
 
+# TODO: Figure out what is going on here
+class Pony; end
+require 'fabricators/pony'
+
+class PoniesCollection
+  include Guacamole::Collection
+end
+
 class Pony
   include Guacamole::Model
 
   attribute :name, String
   attribute :color, String
   attribute :type, Array[String]
-end
-
-class PoniesCollection
-  include Guacamole::Collection
 end
 
 describe 'BasicAQLSupport' do
@@ -26,6 +30,7 @@ describe 'BasicAQLSupport' do
     before do
       Guacamole.configuration.experimental_features = [:aql_support]
 
+      # TODO: This breaks the test
       [pegasus_pony, earth_pony, unicorn_pegasus_pony]
     end
 

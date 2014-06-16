@@ -14,7 +14,8 @@ ControlParameter:
   exclude: []
 DataClump:
   enabled: true
-  exclude: []
+  exclude:
+  - Guacamole::Model::ClassMethods
   max_copies: 2
   min_clump_size: 2
 DuplicateMethodCall:
@@ -72,6 +73,10 @@ TooManyStatements:
   - Guacamole::DocumentModelMapper#model_to_document
   - Guacamole::Collection::ClassMethods#create_document_from
   - Guacamole::Collection::ClassMethods#create_referenced_by_models_of
+  - Guacamole::Model#self.define_my_callbacks
+  - Guacamole::Collection::ClassMethods#create
+  - Guacamole::Collection::ClassMethods#replace
+  - Guacamole::Model::ClassMethods#_define_after_my_callback
   max_statements: 5
 UncommunicativeMethodName:
   enabled: true
@@ -100,7 +105,7 @@ UncommunicativeVariableName:
   enabled: true
   exclude: []
   reject:
-  - !ruby/regexp /^.$/
+  - !ruby/regexp /^[^_]$/
   - !ruby/regexp /[0-9]$/
   - !ruby/regexp /[A-Z]/
   accept: []

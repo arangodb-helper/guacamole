@@ -166,6 +166,37 @@ module Guacamole
   #   @api public
   module Model
     extend ActiveSupport::Concern
+
+    module ClassMethods
+      def _define_before_my_callback(klass, callback) #:nodoc:
+        # TODO: Fix and add back in (klass, callback)
+        collection_class = Guacamole::DocumentModelMapper.collection_for(klass)
+        klass.define_singleton_method("before_#{callback}") do |*args, &block|
+          collection_class.set_callback(:"#{callback}", :before, *args, &block)
+        end
+      end
+
+      def _define_around_my_callback(klass, callback) #:nodoc:
+        # TODO: Fix and add back in (klass, callback)
+        collection_class = Guacamole::DocumentModelMapper.collection_for(klass)
+        klass.define_singleton_method("around_#{callback}") do |*args, &block|
+          collection_class.set_callback(:"#{callback}", :around, *args, &block)
+        end
+      end
+
+      def _define_after_my_callback(klass, callback) #:nodoc:
+        # TODO: Fix and add back in (klass, callback)
+        collection_class = Guacamole::DocumentModelMapper.collection_for(klass)
+        klass.define_singleton_method("after_#{callback}") do |*args, &block|
+          options = args.extract_options!
+          options[:prepend] = true
+          conditional = ActiveSupport::Callbacks::Conditionals::Value.new { |value| value != false }
+          options[:if] = Array(options[:if]) << conditional
+          collection_class.set_callback(:"#{callback}", :after, *(args << options), &block)
+        end
+      end
+    end
+
     # @!parse include ActiveModel::Validations
     # @!parse extend ActiveModel::Naming
     # @!parse include ActiveModel::Conversion
@@ -177,6 +208,28 @@ module Guacamole
       include ActiveModel::Naming
       include ActiveModel::Conversion
       include Virtus.model
+      include ActiveModel::Callbacks
+      def self.define_my_callbacks(*callbacks)
+        options = callbacks.extract_options!
+        options = {
+          terminator: ->(_, result) { result == false },
+          skip_after_callbacks_if_terminated: true,
+          scope: [:kind, :name],
+          only: [:before, :after]
+        }.merge!(options)
+
+        types = Array(options.delete(:only))
+
+        callbacks.each do |callback|
+          define_callbacks(callback, options)
+
+          types.each do |type|
+            send("_define_#{type}_my_callback", self, callback)
+          end
+        end
+      end
+      define_my_callbacks :save, :validation,  :create, :update, :destroy
+
 
       attribute :key, String
       attribute :rev, String
