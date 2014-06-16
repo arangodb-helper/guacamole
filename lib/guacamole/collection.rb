@@ -31,6 +31,15 @@ module Guacamole
     #   @return [Ashikawa::Core::Document] The converted document
     module ClassMethods
       extend Forwardable
+
+
+      def trigger_callback(kind, model,&block)
+        cbs = send("_#{kind}_callbacks")
+        runner = cbs.compile
+        e = ActiveSupport::Callbacks::Filters::Environment.new(model, false, nil, block)
+        runner.call(e).value
+      end
+
       def_delegators :mapper, :model_to_document
       def_delegator :connection, :fetch, :fetch_document
 
@@ -137,11 +146,21 @@ module Guacamole
       #   PodcastsCollection.save(podcast)
       #   podcast.key #=> '27214247'
       def create(model)
-        return false unless model.valid?
+
+        model_validation = true
+        trigger_callback :validation, model do
+          model_validation = model.valid?
+        end
+        return false unless model_validation
 
         add_timestamps_to_model(model)
-        create_document_from(model)
+        trigger_callback :create, model do
+          trigger_callback :save, model do
+            create_document_from(model)
+          end
+        end
         model
+
       end
 
       # Delete a model from the database
@@ -158,7 +177,9 @@ module Guacamole
               else
                 model_or_key
               end
-        fetch_document(key).delete
+        trigger_callback :destroy, model_or_key do
+          fetch_document(key).delete
+        end
         key
       end
 
@@ -176,10 +197,18 @@ module Guacamole
       #   podcast.title = 'Even better'
       #   PodcastsCollection.replace(podcast)
       def replace(model)
-        return false unless model.valid?
+        model_validation = true
+        trigger_callback :validation, model do
+          model_validation = model.valid?
+        end
+        return false unless model_validation
 
         model.updated_at = Time.now
-        replace_document_from(model)
+        trigger_callback :update, model do
+          trigger_callback :save, model do
+            replace_document_from(model)
+          end
+        end
         model
       end
 
@@ -309,7 +338,7 @@ module Guacamole
           ref_collection = mapper.collection_for(ref_model_name)
 
           ref_model = model.send(ref_model_name)
-          next unless ref_model
+          next if ref_model.blank?
 
           ref_collection.save ref_model unless ref_model.persisted?
         end
@@ -328,7 +357,7 @@ module Guacamole
 
           ref_models = model.send(ref_model_name)
 
-          ref_models.each do |ref_model|
+          ref_models.to_a.each do |ref_model|
             ref_model.send("#{model.class.name.demodulize.underscore}=", model)
             ref_collection.save ref_model unless ref_model.persisted?
           end
@@ -348,5 +377,13 @@ module Guacamole
         document
       end
     end
+
+    included do
+      include ActiveSupport::Callbacks
+      define_callbacks  :save , :validation,:create, :update, :destroy
+    end
+
+
+
   end
 end
