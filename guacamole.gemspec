@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'logging', '~> 1.8.1'
   spec.add_development_dependency 'pry', '~> 0.9.12'
   spec.add_development_dependency 'rake', '~> 10.3.2'
-  spec.add_development_dependency 'reek', '~> 1.3.7'
+  spec.add_development_dependency 'reek', '~> 1.3.8'
   spec.add_development_dependency 'rspec', '~> 3.0.0'
   spec.add_development_dependency 'timecop', '~> 0.7.1'
   spec.add_development_dependency 'yard', '~> 0.8.7.4'

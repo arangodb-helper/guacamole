@@ -634,6 +634,41 @@ describe Guacamole::Collection do
     end
   end
 
+  describe 'index' do
+    let(:mock_index) { double('Index') }
+
+    it 'creates a hash index on the given attributes' do
+      params = { on: 'attribute1' }
+      allow(subject.connection).to receive(:add_index).with(:hash, params).and_return(mock_index)
+
+      expect(subject.index(:hash, params)).to eq mock_index
+    end
+  end
+
+  describe 'handle_client_error' do
+    let(:model)     { double('Model').as_null_object }
+
+    before { allow(model).to receive(:persisted?).and_return false }
+
+    it 'should add not raise the error if code was found' do
+      error = Ashikawa::Core::ClientError.new(
+        '1210: cannot create document, unique constraint violated'
+      )
+      allow(subject).to receive(:create).with(model).and_raise error
+
+      expect { subject.save(model) }.not_to raise_error
+    end
+
+    it 'should add raise the error if code is not found' do
+      error = Ashikawa::Core::ClientError.new(
+        "-1: The error is that you can't handle this code"
+      )
+      allow(subject).to receive(:create).with(model).and_raise error
+
+      expect { subject.save(model) }.to raise_error(error)
+    end
+  end
+
   describe 'callbacks' do
     let(:model) { double('Model') }
 

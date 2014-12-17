@@ -115,6 +115,25 @@ describe 'CollectionBasics' do
         end
       end
     end
+
+    describe 'index' do
+      it 'should create a hash index on attributes listed' do
+        expect(subject.connection.indices.any? do
+          |index| index.type == :hash && index.unique
+        end).to eq true
+      end
+
+      it 'does not allow two models with the same unique attribute' do
+        first_document = Fabricate(:article)
+        second_document = Fabricate(:article, unique_attribute: first_document.unique_attribute)
+        expect(second_document.errors).to include(:index)
+      end
+
+      it 'should raise an exception if geo spatial index value is out of range' do
+        document = Fabricate(:article, location: "this is a string and not a location")
+        expect(document.errors).to include(:index)
+      end
+    end
   end
 
 end

@@ -33,8 +33,15 @@ module Guacamole
       extend Forwardable
       def_delegators :mapper, :model_to_document
       def_delegator :connection, :fetch, :fetch_document
+      def_delegator :connection, :add_index, :index
 
       attr_accessor :connection, :mapper, :database
+
+      # ERROR CODES
+      ERROR_CODES = {
+        1210 => :index,
+        1211 => :geo_index
+      }
 
       # The raw `Database` object that was configured
       #
@@ -123,6 +130,22 @@ module Guacamole
       #   PodcastsCollection.save(podcast)
       def save(model)
         model.persisted? ? update(model) : create(model)
+      rescue Ashikawa::Core::ClientError => client_error
+        handle_client_error(client_error, model)
+        false
+      end
+
+      # Handles the client error by adding appropriate errros to the model or raising the error again
+      #
+      # @param client_error [Ashikawa::Core::ClientError] the client error that was raised
+      # @param model [Model] the model that failed to be saved
+      def handle_client_error(client_error, model)
+        code, _, message = client_error.message.partition(':')
+        if error_code = ERROR_CODES[code.to_i]
+          model.errors.add error_code, message.strip
+        else
+          raise client_error
+        end
       end
 
       # Persist a model in the collection
