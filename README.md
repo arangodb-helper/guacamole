@@ -7,6 +7,8 @@
 
 # Guacamole
 
+**This gem is not maintained and not compatible with the current version of ArangoDB. If you want to take over the project, please contact info@arangodb.com**
+
 Guacamole is an Object Document Mapper (ODM) for the multi-model NoSQL database [ArangoDB](https://www.arangodb.com/). Its main goal is to support easy integration into Ruby on Rails but will likely work in other Rack-based frameworks as well. There are a couple of design goals behind Guacamole which should drive all our development effort:
 
   * Easy integration on the View layer (i.e. form builders)
