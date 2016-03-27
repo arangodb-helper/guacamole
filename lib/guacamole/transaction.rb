@@ -21,7 +21,7 @@ module Guacamole
     attr_reader :model
 
     # A simple structure to build the vertex information we need to pass to the transaction code.
-    class Vertex < Struct.new(:model, :collection, :document)
+    class Vertex < Struct.new(:model, :collection, :document, :edge_attributes)
       # The key of the wrapped model
       #
       # @return [String] The key of the model
@@ -161,6 +161,8 @@ module Guacamole
       # @return [Attribute] The edge attribute to resolve edges and relations
       attr_reader :edge_attribute
 
+      ModelWithAttributes = Struct.new(:model, :edge_attributes)
+
       # Initializes a new SubGraphTargetState instance
       #
       # @param model [Model] The start model
@@ -211,7 +213,18 @@ module Guacamole
       #
       # @return [Array<Model>] A list of related models
       def related_models
-        [edge_attribute.get_value(start_model)].compact.flatten
+        value = edge_attribute.get_value(start_model)
+        return [] unless value
+        attr_type = edge_attribute.type(start_model)
+
+        case attr_type
+        when Virtus::Attribute::Hash::Type
+          [ value.map{ |k,v| ModelWithAttributes.new(v, { hash_key: k }) } ].compact.flatten
+        when Virtus::Attribute::Collection::Type
+          [ value.map{ |v|  ModelWithAttributes.new(v, {}) } ].compact.flatten
+        else
+          [ ModelWithAttributes.new(value, {}) ]
+        end
       end
 
       # The keys of the old edge documents
@@ -232,10 +245,10 @@ module Guacamole
       def from_vertices
         case start_model
         when edge_class.from_collection.model_class
-          [Vertex.new(start_model, edge_class.from_collection.collection_name, model_to_document(start_model))]
+          [Vertex.new(start_model, edge_class.from_collection.collection_name, model_to_document(start_model), {})]
         when edge_class.to_collection.model_class
-          related_models.map do |from_model|
-            Vertex.new(from_model, edge_class.from_collection.collection_name, model_to_document(from_model))
+          related_models.map do |related|
+            Vertex.new(related.model, edge_class.from_collection.collection_name, model_to_document(related.model),related.edge_attributes)
           end
         end
       end
@@ -246,11 +259,11 @@ module Guacamole
       def to_vertices
         case start_model
         when edge_class.from_collection.model_class
-          related_models.map do |to_model|
-            Vertex.new(to_model, edge_class.to_collection.collection_name, model_to_document(to_model))
+          related_models.map do |related|
+            Vertex.new(related.model, edge_class.to_collection.collection_name, model_to_document(related.model), related.edge_attributes)
           end
         when edge_class.to_collection.model_class
-          [Vertex.new(start_model, edge_class.to_collection.collection_name, model_to_document(start_model))]
+          [Vertex.new(start_model, edge_class.to_collection.collection_name, model_to_document(start_model), {})]
         end
       end
 
@@ -258,8 +271,8 @@ module Guacamole
       #
       # @return [Array<Hash>] A list of hashes representing the edges
       def edges
-        from_vertices.product(to_vertices).map do |from_vertex, to_vertex|
-          { _from: from_vertex.id_for_edge, _to: to_vertex.id_for_edge, attributes: {} }
+        t = from_vertices.product(to_vertices).map do |from_vertex, to_vertex|
+          { _from: from_vertex.id_for_edge, _to: to_vertex.id_for_edge, attributes: to_vertex.edge_attributes }
         end
       end
 
@@ -330,7 +343,7 @@ module Guacamole
       }
     end
 
-    # Executes the actual transaction on the daatabase
+    # Executes the actual transaction on the database
     #
     # @api private
     def execute_transaction

@@ -17,8 +17,24 @@ module Guacamole
       FOR n IN GRAPH_NEIGHBORS(@graph,
                       { _key: @model_key },
                       { direction: @direction, edgeCollectionRestriction: @edge_collection })
-        RETURN n.vertex
+        RETURN { "vertex" : n.vertex, "edge_attributes" : ZIP(ATTRIBUTES(n.path.edges[0],true,false), VALUES(n.path.edges[0], true))}
     AQL
+
+    class AnnotatedEdgeMapper
+      def initialize(model_mapper, model_class)
+        @model_mapper = model_mapper
+        @model_class = model_class
+      end
+
+      Container = Struct.new(:edge_attributes, :model)
+      def document_to_model(document)
+        Container.new(document['edge_attributes'], @model_mapper.hash_to_model(document['vertex']))
+      end
+
+      def model_class
+        @model_class
+      end
+    end
 
     class << self
       def for(edge_class)
@@ -52,7 +68,7 @@ module Guacamole
       end
 
       def neighbors(model, direction = :inbound)
-        query                 = AqlQuery.new(self, mapper_for_target(model), return_as: nil, for_in: nil)
+        query                 = AqlQuery.new(self, AnnotatedEdgeMapper.new(mapper_for_target(model), model.class), return_as: nil, for_in: nil)
         query.aql_fragment    = NEIGHBORS_AQL_STRING
         query.bind_parameters = build_bind_parameter(model, direction)
         query

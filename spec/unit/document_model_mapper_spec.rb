@@ -61,6 +61,16 @@ describe Guacamole::DocumentModelMapper do
       expect(model).to eq model_instance
     end
 
+    it 'should create a new model instance from an Ashikawa::Core::Document presented as Hash' do
+      allow(document_attributes).to receive(:[]).with('_key').and_return(some_key)
+      allow(document_attributes).to receive(:[]).with('_revision').and_return(some_rev)
+
+      expect(subject.model_class).to receive(:new).with(document_attributes)
+
+      model = subject.hash_to_model document.to_h
+      expect(model).to eq model_instance
+    end
+
     it 'should set the rev and key on a new model instance' do
       expect(model_instance).to receive(:key=).with(some_key)
       expect(model_instance).to receive(:rev=).with(some_rev)
@@ -74,6 +84,8 @@ describe Guacamole::DocumentModelMapper do
       end
       let(:relation_proxy) { double('Proxy') }
       let(:setter_for_relation) { double('SetterForRelation') }
+      let(:virtus_collection_type) { double('VirtusCollection') }
+      let(:virtus_hash_type) { double('VirtusHash') }
 
       before do
         allow(attribute_with_edge_relation).to receive(:setter).and_return(setter_for_relation)
@@ -81,6 +93,9 @@ describe Guacamole::DocumentModelMapper do
         allow(subject).to receive(:build_proxy).
                            with(model_instance, attribute_with_edge_relation).
                            and_return(relation_proxy)
+        stub_const('Virtus::Attribute::Collection::Type', virtus_collection_type)
+        stub_const('Virtus::Attribute::Hash::Type', virtus_hash_type)
+        allow(attribute_with_edge_relation).to receive(:type).with(model_instance).and_return(virtus_collection_type)
       end
 
       it 'should set first the key and rev and after that the proxy' do
@@ -134,8 +149,7 @@ describe Guacamole::DocumentModelMapper do
         end
 
         it 'should check the edge_attribute type for a Virtus collection type' do
-          model_class, attribute_set, attribute_type, virtus_collection_type = [double] * 4
-          stub_const('Virtus::Attribute::Collection::Type', virtus_collection_type)
+          model_class, attribute_set, attribute_type = [double] * 3
 
           allow(subject).to receive(:edge_attribute_a_collection?).and_call_original
 
@@ -144,6 +158,7 @@ describe Guacamole::DocumentModelMapper do
           allow(attribute_set).to receive(:[]).with(attribute_with_edge_relation.name).and_return(attribute_type)
           allow(attribute_type).to receive(:type).and_return(attribute_type)
           expect(attribute_type).to receive(:is_a?).with(virtus_collection_type).and_return(false)
+          expect(attribute_type).to receive(:is_a?).with(virtus_hash_type).and_return(false)
 
           subject.edge_attribute_a_collection?(model_instance, attribute_with_edge_relation)
         end

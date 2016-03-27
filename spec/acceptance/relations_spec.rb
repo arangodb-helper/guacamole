@@ -227,9 +227,7 @@ describe 'Graph based relations' do
       it 'should create the new target and connect it with the start' do
         the_hunger_games.author = suzanne_collins
         BooksCollection.save the_hunger_games
-
         book = BooksCollection.by_key the_hunger_games.key
-
         expect(book.author.name).to eq suzanne_collins.name
       end
     end

@@ -8,6 +8,8 @@ describe Guacamole::Proxies::Relation do
   let(:edge_class) { double('EdgeClass') }
   let(:responsible_edge_collection) { double('EdgeCollection') }
   let(:edge_collection_name)        { 'name_of_the_edge_collection' }
+  let(:query) { double(Guacamole::Query) }
+  let(:target) { double('Target') }
 
   before do
     allow(Guacamole::EdgeCollection).to receive(:for).with(edge_class).and_return(responsible_edge_collection)
@@ -24,9 +26,17 @@ describe Guacamole::Proxies::Relation do
 
   context 'initialized proxy' do
     let(:proxy_options) { {} }
-    let(:neighbors) { double('Neighbors') }
+    let(:query_options) {double('QueryOptions') }
+    let(:neighbors) { double('Neighbors', options:query_options ) }
 
     subject { Guacamole::Proxies::Relation.new(model, edge_class, proxy_options) }
+
+    before do
+      subject.query = query
+
+      allow(responsible_edge_collection).to receive(:neighbors).with(model, :outbound).and_return neighbors
+      allow(neighbors).to receive(:to_a).and_return([])
+    end
 
     # The following is not possible with `its` because `send` is not available
     it 'should have an edge_collection' do
@@ -37,41 +47,37 @@ describe Guacamole::Proxies::Relation do
       expect(subject.direction).to eq :outbound
     end
 
-    it 'should know it the proxy relates to a collection' do
+    it 'should know if the proxy relates to a collection' do
       expect(subject.relates_to_collection?).to eq true
     end
 
-    context 'with relation to collection' do
-      let(:proxy_options) { { just_one: false } }
-      let(:related_models) { double('RelatedModels', count: 23) }
+    it 'should delegate query methods to the query' do
+      allow(query).to receive(:methods).and_return [:limit, :send]
+      allow(query).to receive(:method).with(:limit).and_return(query)
+      allow(query).to receive(:owner).and_return 'Guacamole::Query'
+      expect(query).to receive(:send).with(:limit, 10)
 
-      before do
-        allow(related_models).to receive(:to_a).and_return(neighbors)
-        allow(responsible_edge_collection).to receive(:neighbors).
-                                               with(model, subject.direction).
-                                               and_return(related_models)
-      end
-
-      it 'should call the #neighbors method on the appropriate edge collection' do
-        expect(subject.count).to eq related_models.count
-      end
+      subject.limit(10)
     end
 
-    context 'with relation to single model' do
-      let(:proxy_options) { { just_one: true } }
-      let(:related_model) { double('RelatedModel', name: 'The Model') }
+    it 'should delegate methods to the target' do
+      allow(query).to receive(:methods).and_return [:limit, :send ]
+      allow(target).to receive(:methods).and_return [ :to_a, :send ]
 
-      before do
-        allow(neighbors).to receive(:first).and_return(related_model)
-        allow(neighbors).to receive(:to_a).and_return(neighbors)
-        allow(responsible_edge_collection).to receive(:neighbors).
-                                               with(model, subject.direction).
-                                               and_return(neighbors)
-      end
+      allow(query).to receive(:call).and_return(query)
+      allow(query).to receive(:to_a).and_return(target)
 
-      it 'should call the #neighbors method on the appropriate edge collection' do
-        expect(subject.name).to eq related_model.name
-      end
+      expect(target).to receive(:send).with(:to_a)
+
+      subject.to_a
+    end
+
+    it 'should delegate methods to the query if both query and target define it' do
+      allow(query).to receive(:methods).and_return [:limit, :send ]
+      allow(target).to receive(:methods).and_return [ :to_a, :send ]
+
+      allow(query).to receive(:call).and_return(query)
+      allow(query).to receive(:to_a).and_return(target)
     end
   end
 end

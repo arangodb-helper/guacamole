@@ -84,7 +84,6 @@ module Guacamole
       # @return [Object] the stored object
       def retrieve_or_store(klass, key, &block)
         return retrieve(klass, key) if include?(klass, key)
-
         store block.call
       end
 

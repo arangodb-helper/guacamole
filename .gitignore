@@ -17,3 +17,6 @@ test/tmp
 test/version_tmp
 tmp
 cache
+.idea/
+.ruby-gemset
+guacamole.iml
